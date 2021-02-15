@@ -3614,21 +3614,15 @@ private(i,j,k,taggedparts,radii,masses,indices,posref,posparts,velparts,typepart
                     }
                 }
 
-#if (defined(GASON)) || (defined(GASON) && defined(SWIFTINTERFACE))
-    	        if(sonum_hotgas > 0){
-		   for (int r_ap = 0; r_ap < sonum_hotgas; r_ap++){
-    		        if(rc < SOlg_radii_highT[r_ap]){
-			   if(typeval == GASTYPE){
-                    		if(temp[jj] > opt.temp_max_cut && sfr[jj] <= 0){
-                         		pdata[i].SO_mass_highT[r_ap] += massval;
-                         		pdata[i].SO_Temp_mean_gas_highT[r_ap] += massval * temp[jj];
-                         		pdata[i].SO_Z_mean_gas_highT[r_ap] += massval * Zgas[jj];
-                    		}
-                	   }
-			}
-		   }
-		}
-#endif
+                if (typeval == GASTYPE && temp[jj] > opt.temp_max_cut && sfr[jj] <= 0) {
+                    for (int r_ap = 0; r_ap < sonum_hotgas; r_ap++) {
+                        if (rc < SOlg_radii_highT[r_ap]) {
+                            pdata[i].SO_mass_highT[r_ap] += massval;
+                            pdata[i].SO_Temp_mean_gas_highT[r_ap] += massval * temp[jj];
+                            pdata[i].SO_Z_mean_gas_highT[r_ap] += massval * Zgas[jj];
+                        }
+                    }
+                 }
 
 #endif
 #ifdef STARON
