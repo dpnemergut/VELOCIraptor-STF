@@ -3231,9 +3231,6 @@ void GetSOMasses(Options &opt, const Int_t nbodies, Particle *Part, Int_t ngroup
     Int_t i,j,k, nhalos = 0;
     LOG(debug) << "Get inclusive masses";
     LOG(debug) << " with masses based on full SO search (slower) for halos only";
-    Double_t ri,ri2,rcmv,r2,cmx,cmy,cmz,EncMass,Ninside;
-    Double_t x,y,z,vx,vy,vz,rc,rcold;
-    Coordinate J(0.);
     Double_t virval=std::log10(opt.virlevel*opt.rhobg);
     Double_t mBN98val=std::log10(opt.virBN98*opt.rhocrit);
     Double_t m200val=std::log10(opt.rhocrit*200.0);
@@ -3262,19 +3259,8 @@ void GetSOMasses(Options &opt, const Int_t nbodies, Particle *Part, Int_t ngroup
 #endif
 
 
-    Double_t fac,rhoval,rhoval2;
-    Double_t time2;
-    int nthreads=1,tid;
-#ifndef USEMPI
-    int ThisTask=0,NProcs=1;
-#endif
+    Double_t fac;
     vr::Timer timer;
-#ifdef USEOPENMP
-#pragma omp parallel
-    {
-        if (omp_get_thread_num()==0) nthreads=omp_get_num_threads();
-    }
-#endif
 
     //first we need to store the indices so we can place particles back in the order they need to be
     //as we are going to build a tree to search particles
@@ -3357,7 +3343,7 @@ void GetSOMasses(Options &opt, const Int_t nbodies, Particle *Part, Int_t ngroup
 
 #ifdef USEOPENMP
 #pragma omp parallel default(shared)  \
-private(i,j,k,taggedparts,radii,masses,indices,posref,posparts,velparts,typeparts,n,dx,EncMass,J,rc,rhoval,rhoval2,tid,SOpids,iSOfound)
+private(i,j,k,taggedparts,radii,masses,indices,posref,posparts,velparts,typeparts,n,dx,SOpids,iSOfound)
 {
 #pragma omp for schedule(dynamic) nowait
 #endif
@@ -3530,7 +3516,7 @@ private(i,j,k,taggedparts,radii,masses,indices,posref,posparts,velparts,typepart
 
 
         //init to zero
-        Coordinate zero(0,0,0), J;
+        Coordinate zero(0,0,0);
         pdata[i].gJ200c = zero;
         pdata[i].gJ200m = zero;
         pdata[i].gJBN98 = zero;
@@ -3584,8 +3570,8 @@ private(i,j,k,taggedparts,radii,masses,indices,posref,posparts,velparts,typepart
                 auto typeval = typeparts[jj];
 #endif
 
-                J=Coordinate(posparts[jj]).Cross(velparts[jj])*massval;
-                rc=radii[jj];
+                auto J = Coordinate(posparts[jj]).Cross(velparts[jj])*massval;
+                auto rc = radii[jj];
                 if (rc<=pdata[i].gR200c) pdata[i].gJ200c+=J;
                 if (rc<=pdata[i].gR200m) pdata[i].gJ200m+=J;
                 if (rc<=pdata[i].gRBN98) pdata[i].gJBN98+=J;
