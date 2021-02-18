@@ -3443,9 +3443,9 @@ private(i,j,k,taggedparts,radii,masses,indices,posref,posparts,velparts,typepart
 #endif
 #if (defined(GASON)) || (defined(GASON) && defined(SWIFTINTERFACE))
                    if (sonum_hotgas > 0) {
-                       sfr.resize(typeparts.size()+taggedparts.size());
-                       temp.resize(typeparts.size()+taggedparts.size());
-                       Zgas.resize(typeparts.size()+taggedparts.size());
+                       sfr.resize(sfr.size()+taggedparts.size());
+                       temp.resize(temp.size()+taggedparts.size());
+                       Zgas.resize(Zgas.size()+taggedparts.size());
                    }
 #endif
 
