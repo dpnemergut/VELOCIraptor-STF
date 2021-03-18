@@ -416,6 +416,7 @@ struct Options
     //@{
     char *fname,*outname,*smname,*pname,*gname;
     char *ramsessnapname;
+    int  ramsesdmage0; // NEWRAMSES: For RAMSES sims that only DM particles have age zero
     //@}
     ///input format
     int inputtype;

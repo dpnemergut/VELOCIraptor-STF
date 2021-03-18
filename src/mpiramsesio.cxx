@@ -241,7 +241,8 @@ void MPINumInDomainRAMSES(Options &opt)
                     for (int nn = 0; nn < nchunk; nn++)
                     {
                         //this should be a ghost star particle
-                        if (fabs((mtempchunk[nn]-dmp_mass)/dmp_mass) > 1e-5 && (agetempchunk[nn] == 0.0)) nghost++;
+                        // NEWRAMSES
+                        if (opt.ramsesdmage0==0 && fabs((mtempchunk[nn]-dmp_mass)/dmp_mass) > 1e-5 && (agetempchunk[nn] == 0.0)) nghost++;
                         else
                         {
                             xtemp[0] = xtempchunk[nn];
@@ -250,7 +251,8 @@ void MPINumInDomainRAMSES(Options &opt)
                             mtemp = mtempchunk[nn];
                             ageval = agetempchunk[nn];
 
-                            if (fabs(mtemp-dmp_mass)/dmp_mass<1e-5)
+                            // NEWRAMSES
+                            if (ageval == 0)
                             {
                                 typeval = DARKTYPE;
                                 ndark++;

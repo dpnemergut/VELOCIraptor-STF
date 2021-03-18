@@ -1704,6 +1704,9 @@ void GetParamFile(Options &opt)
                         opt.iusetracerparticles = atoi(vbuff);
                     else if (strcmp(tbuff, "Input_includes_extradm_particle")==0)
                         opt.iuseextradarkparticles = atoi(vbuff);
+                    // NEWRAMSES: DM particles have age 0
+                    else if (strcmp(tbuff, "RamsesDMAge0")==0)
+                        opt.ramsesdmage0=atoi(vbuff);
                 }
             }
         }
