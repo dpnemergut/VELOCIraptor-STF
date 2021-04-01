@@ -1080,7 +1080,7 @@ void ReadRamses(Options &opt, vector<Particle> &Part, const Int_t nbodies, Parti
         byteoffset+=RAMSES_fortran_read(Famr[i],header[i].npart[RAMSESGASTYPE]);
 
         //then skip the rest
-        for (j=0;j<14;j++) RAMSES_fortran_skip(Famr[i]);
+        RAMSES_fortran_skip(Famr[i], 14);
         if (lmin>header[i].nlevelmax) lmin=header[i].nlevelmax;
         if (lmax<header[i].nlevelmax) lmax=header[i].nlevelmax;
         //@}
@@ -1096,15 +1096,30 @@ void ReadRamses(Options &opt, vector<Particle> &Part, const Int_t nbodies, Parti
     }
     for (i=0;i<opt.num_files;i++) if (ireadfile[i]) {
         //then apparently read ngridlevels, which appears to be an array storing the number of grids at a given level
-        ngridlevel=new int[header[i].nlevelmax];
-        ngridfile=new int[(1+header[i].nboundary)*header[i].nlevelmax];
-        RAMSES_fortran_read(Famr[i],ngridlevel);
-        for (j=0;j<header[i].nlevelmax;j++) ngridfile[j]=ngridlevel[j];
+        ngridlevel=new int[header[i].nlevelmax]();
+        ngridfile=new int[(1+header[i].nboundary)*header[i].nlevelmax]();
+
+        // Next row is a flattened 2D array of size nfiles * nlevelmax
+        Famr[i].read((char*)&dummy, sizeof(dummy));
+        for (j=0;j<header[i].nfiles*header[i].nlevelmax;j++) {
+            // Skip until we reach i row in the 2D array
+            if (i*header[i].nlevelmax <= j && j < (i+1)*header[i].nlevelmax) {
+                Famr[i].read((char*)&ngridlevel[j%header[i].nlevelmax], sizeof(int));
+            } else {
+                Famr[i].read((char*)&dummy, sizeof(int));
+            }
+        }
+        Famr[i].read((char*)&dummy, sizeof(dummy));
+
+        for (j=0;j<header[i].nlevelmax;j++) {
+            ngridfile[j]=ngridlevel[j];
+        }
+
         //skip some more
         RAMSES_fortran_skip(Famr[i]);
         //if nboundary>0 then need two skip twice then read ngridbound
         if(header[i].nboundary>0) {
-            ngridbound=new int[header[i].nboundary*header[i].nlevelmax];
+            ngridbound=new int[header[i].nboundary*header[i].nlevelmax]();
             RAMSES_fortran_skip(Famr[i]);
             RAMSES_fortran_skip(Famr[i]);
             //ngridbound is an array of some sort but I don't see what it is used for
@@ -1128,7 +1143,7 @@ void ReadRamses(Options &opt, vector<Particle> &Part, const Int_t nbodies, Parti
                 if (chunksize>0) {
                     xtempchunk=new RAMSESFLOAT[3*chunksize];
                     //store son value in icell
-                    icellchunk=new int[header[i].twotondim*chunksize];
+                    icellchunk=new int[header[i].twotondim*chunksize]();
                     //skip grid index, next index and prev index.
                     RAMSES_fortran_skip(Famr[i],3);
                     //now read grid centre
