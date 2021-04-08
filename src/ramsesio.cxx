@@ -1088,9 +1088,7 @@ void ReadRamses(Options &opt, vector<Particle> &Part, const Int_t nbodies, Parti
         //@{
         RAMSES_fortran_skip(Fhydro[i]);
         RAMSES_fortran_read(Fhydro[i],header[i].nvarh);
-        RAMSES_fortran_skip(Fhydro[i]);
-        RAMSES_fortran_skip(Fhydro[i]);
-        RAMSES_fortran_skip(Fhydro[i]);
+        RAMSES_fortran_skip(Fhydro[i], 3);
         RAMSES_fortran_read(Fhydro[i],header[i].gamma_index);
         //@}
     }
@@ -1120,8 +1118,7 @@ void ReadRamses(Options &opt, vector<Particle> &Part, const Int_t nbodies, Parti
         //if nboundary>0 then need two skip twice then read ngridbound
         if(header[i].nboundary>0) {
             ngridbound=new int[header[i].nboundary*header[i].nlevelmax]();
-            RAMSES_fortran_skip(Famr[i]);
-            RAMSES_fortran_skip(Famr[i]);
+            RAMSES_fortran_skip(Famr[i], 2);
             //ngridbound is an array of some sort but I don't see what it is used for
             RAMSES_fortran_read(Famr[i],ngridbound);
             for (j=0;j<header[i].nlevelmax;j++){
@@ -1132,7 +1129,8 @@ void ReadRamses(Options &opt, vector<Particle> &Part, const Int_t nbodies, Parti
         RAMSES_fortran_skip(Famr[i],2);
         //if odering list in info is bisection need to skip more
         if (orderingstring==string("bisection")) RAMSES_fortran_skip(Famr[i],5);
-        else RAMSES_fortran_skip(Famr[i],4);
+        else RAMSES_fortran_skip(Famr[i]);
+        RAMSES_fortran_skip(Famr[i],3);
 
         ninputoffset=0;
 
@@ -1141,20 +1139,38 @@ void ReadRamses(Options &opt, vector<Particle> &Part, const Int_t nbodies, Parti
                 //first read amr for positions
                 chunksize=nchunk=ngridfile[k*header[i].nlevelmax+j];
                 if (chunksize>0) {
-                    xtempchunk=new RAMSESFLOAT[3*chunksize];
+                    xtempchunk=new RAMSESFLOAT[header[i].ndim*chunksize]();
                     //store son value in icell
                     icellchunk=new int[header[i].twotondim*chunksize]();
                     //skip grid index, next index and prev index.
                     RAMSES_fortran_skip(Famr[i],3);
+
                     //now read grid centre
+                    // Read ndim 2 element arrays
                     for (idim=0;idim<header[i].ndim;idim++) {
-                        RAMSES_fortran_read(Famr[i],&xtempchunk[idim*chunksize]);
+                        Famr[i].read((char*)&dummy, sizeof(dummy));
+                        // First value of array is 0
+                        Famr[i].read((char*)&dummy, sizeof(int));
+                        // Read second value of array
+                        Famr[i].read((char*)&xtempchunk[idim*chunksize], sizeof(int));
+                        Famr[i].read((char*)&dummy, sizeof(dummy));
+
+                        // Fill remaining xtempchunk with xtempchunk[idim*chunksize]
+                        for (int fill=idim*chunksize+1;fill<(idim+1)*chunksize;fill++) {
+                            xtempchunk[fill] = xtempchunk[idim*chunksize];
+                        }
                     }
+
                     //skip father index, then neighbours index
                     RAMSES_fortran_skip(Famr[i],1+2*header[i].ndim);
                     //read son index to determine if a cell in a specific grid is at the highest resolution and needs to be represented by a particle
                     for (idim=0;idim<header[i].twotondim;idim++) {
                         RAMSES_fortran_read(Famr[i],&icellchunk[idim*chunksize]);
+
+                        // Fill remaining icellchunk with icellchunk[idim*chunksize]
+                        for (int fill=idim*chunksize+1;fill<(idim+1)*chunksize;fill++) {
+                            icellchunk[fill] = icellchunk[idim*chunksize];
+                        }
                     }
                     //skip cpu map and refinement map (2^ndim*2)
                     RAMSES_fortran_skip(Famr[i],2*header[i].twotondim);
