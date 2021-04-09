@@ -66,6 +66,25 @@ int RAMSES_fortran_read(fstream &F, RAMSESFLOAT *f){
     return byteoffset;
 }
 
+/**
+ * Reads a line into the given array.
+ * For now, the sizes of the two arrays must match.
+ *
+ * @param F Address of the file to read from.
+ * @param i Pointer to the start of the array.
+ * @return Total bytes read in.
+ */
+int RAMSES_fortran_read_array(fstream &F, int *i){
+    static const unsigned int SIZE = sizeof(i)/sizeof(i[0]);
+    int dummy,byteoffset=0;
+    F.read((char*)&dummy, sizeof(int)); byteoffset+=sizeof(int);
+    for(int j=0; j<SIZE; j++) {
+        F.read((char*)i, sizeof(dummy)); byteoffset+=dummy;
+    }
+    F.read((char*)&dummy, sizeof(int)); byteoffset+=sizeof(int);
+    return byteoffset;
+}
+
 int RAMSES_fortran_skip(fstream &F, int nskips){
     int dummy,byteoffset=0;
     for (int i=0;i<nskips;i++) {
